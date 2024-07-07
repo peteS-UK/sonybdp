@@ -1,0 +1,18 @@
+{
+  "title": "Sony BDP",
+    "config": {
+      "error": {
+        "data": "Enter a name for your BDP",
+        "select": "You must enter a naume"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "Name of the Sony BDP"
+          },
+          "description": "Enter the name for your BDP",
+          "title": "Sony BDP"
+        }
+      }
+    }
+  }
