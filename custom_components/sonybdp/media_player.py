@@ -11,7 +11,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    RepeatMode,
 )
 
 from homeassistant import config_entries, core
@@ -34,6 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 from .const import (
     SERVICE_SEND_COMMAND,
     DEFAULT_NAME,
+    CONF_BROADLINK_NAME,
+    CONF_IR_ENTITY,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -42,14 +43,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_CDX = (
+SUPPORT_MP = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.STOP
-    | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
 )
@@ -63,13 +63,22 @@ async def async_setup_entry(
 
     config = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([BDPDevice(hass, config[CONF_NAME])])
+    async_add_entities(
+        [
+            BDPDevice(
+                hass,
+                config[CONF_NAME],
+                config[CONF_IR_ENTITY],
+                config[CONF_BROADLINK_NAME],
+            )
+        ]
+    )
 
 
 class BDPDevice(MediaPlayerEntity):
     # Representation of a Emotiva Processor
 
-    def __init__(self, hass, name):
+    def __init__(self, hass, name, ir_entity_id, broadlink_name):
 
         self._hass = hass
         self._state = MediaPlayerState.OFF
@@ -79,6 +88,8 @@ class BDPDevice(MediaPlayerEntity):
         )
         self._device_class = "receiver"
         self._name = name
+        self._ir_entity_id = ir_entity_id
+        self._broadlink_name = broadlink_name
 
     should_poll = False
 
@@ -93,16 +104,6 @@ class BDPDevice(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState:
         return self._state
-
-    async def async_turn_off(self) -> None:
-        await self._send_broadlink_command("power")
-        self._state = MediaPlayerState.OFF
-        self.async_schedule_update_ha_state()
-
-    async def async_turn_on(self) -> None:
-        await self._send_broadlink_command("power")
-        self._state = MediaPlayerState.ON
-        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -122,8 +123,8 @@ class BDPDevice(MediaPlayerEntity):
                 (DOMAIN, self._unique_id)
             },
             name=self._name,
-            manufacturer="Naim",
-            model="CDX",
+            manufacturer="Sony",
+            model="BDP",
         )
 
     @property
@@ -144,30 +145,31 @@ class BDPDevice(MediaPlayerEntity):
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
-        return SUPPORT_CDX
-
-    @property
-    def repeat(self):
-        return RepeatMode.ONE
+        return SUPPORT_MP
 
     async def _send_broadlink_command(self, command):
+
         await self._hass.services.async_call(
             "remote",
             "send_command",
             {
-                "entity_id": "remote.rm_mini_4",
+                "entity_id": self._ir_entity_id,
                 "num_repeats": "1",
                 "delay_secs": "0.4",
-                "device": "BDP",
+                "device": self._broadlink_name,
                 "command": command,
             },
         )
 
-    async def async_set_repeat(self, repeat: RepeatMode) -> None:
-        """Set the repeat mode."""
-        if repeat == RepeatMode.ONE:
-            await self._send_broadlink_command("repeat")
-            self.async_schedule_update_ha_state()
+    async def async_turn_off(self) -> None:
+        await self._send_broadlink_command("power")
+        self._state = MediaPlayerState.OFF
+        self.async_schedule_update_ha_state()
+
+    async def async_turn_on(self) -> None:
+        await self._send_broadlink_command("power")
+        self._state = MediaPlayerState.ON
+        self.async_schedule_update_ha_state()
 
     async def async_media_stop(self) -> None:
         """Send stop command to media player."""

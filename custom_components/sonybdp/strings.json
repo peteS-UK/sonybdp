@@ -2,15 +2,17 @@
   "title": "Sony BDP",
     "config": {
       "error": {
-        "data": "Enter a name for your BDP",
-        "select": "You must enter a naume"
+        "data": "Enter a name, IR Entity Name and Broadlink Device name for your BDP",
+        "select": "You must enter a name, entity and broadlink"
       },
       "step": {
         "user": {
           "data": {
-            "name": "Name of the Sony BDP"
+            "name": "Name of the Sony BDP",
+            "ir_entity": "Entity ID of IR Blaster",
+            "broadlink_name":"Name of the device in Broadlink config"
           },
-          "description": "Enter the name for your BDP",
+          "description": "Enter the details for your BDP",
           "title": "Sony BDP"
         }
       }

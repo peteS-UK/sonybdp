@@ -4,9 +4,7 @@ from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN, CONF_IR_ENTITY, CONF_BROADLINK_NAME
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_MODEL
@@ -24,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_IR_ENTITY): cv.string,
+        vol.Required(CONF_BROADLINK_NAME): cv.string,
     }
 )
 
